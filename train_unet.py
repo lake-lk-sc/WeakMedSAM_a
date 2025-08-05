@@ -152,7 +152,7 @@ def main():
 
     torch.save(
         model.module.state_dict(),
-        os.path.join(f"{args.logdir}_for_Unet", args.index, f"{args.index}.pth"),
+        os.path.join(f"{args.logdir}", args.index, f"{args.index}.pth"),
     )
 
 if __name__ == "__main__":

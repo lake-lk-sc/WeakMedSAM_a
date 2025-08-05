@@ -155,7 +155,7 @@ def main():
 
     torch.save(
         model.module.state_dict(),
-        os.path.join(f"{args.logdir}_for_SAM", args.index, f"{args.index}.pth"),
+        os.path.join(f"{args.logdir}", args.index, f"{args.index}.pth"),
         _use_new_zipfile_serialization=False,
     )
 
