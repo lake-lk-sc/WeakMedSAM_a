@@ -1,3 +1,9 @@
 SimpleITK
 scikit-learn
 scipy
+torch
+torchvision
+open3d
+pillow
+numpy
+tqdm
