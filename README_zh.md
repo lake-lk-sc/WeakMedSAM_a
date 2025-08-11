@@ -98,6 +98,75 @@ python train_unet.py --seed 42 --lr '1e-4' --batch_size 128 --max_epochs 10 --va
 python eval.py --data_path $brats_output_path --data_module 'brats' --batch_size 128 --num_classes 2 --ckpt $logdir_u/$index/$index.pth --gpus $gpus
 ```
 
+## 附加工具
+
+除了核心的训练和评估流程，项目还提供了一些用于数据转换和可视化的实用工具。
+
+### 1. 生成点云文件 (`process_all_patients_to_ply.py`)
+
+在训练完最终的分割网络 (UNet) 后，你可以使用此脚本为所有病人生成3D分割的点云表示（`.ply`文件）。这些文件对于3D可视化非常有用。
+
+该脚本会：
+1. 加载一个训练好的 UNet 模型。
+2. 遍历所有病人的2D灰度切片。
+3. 对每个病人进行推理，构建一个3D的分割体。
+4. 从原始NIfTI文件中获取体素间距，将分割体转换为带有真实世界坐标的点云。
+5. （可选）对点云进行下采样。
+6. 将结果保存为 `.ply` 文件。
+
+**使用方法:**
+```bash
+python process_all_patients_to_ply.py \
+    --input_dir $brats_output_path \
+    --output_dir $point_cloud_output_path \
+    --model_path $logdir_u/$index/$index.pth \
+    --nifti_root $brats_input_path/MICCAI_BraTS_2019_Data_Training \
+    --mapping_csv $brats_input_path/MICCAI_BraTS_2019_Data_Training/name_mapping.csv \
+    --down_sample 4096
+```
+- `--output_dir`: 指定保存 `.ply` 文件的目录。
+- `--model_path`: 指向你训练好的 UNet 模型权重文件。
+- 其他路径参数请根据你的设置进行相应替换。
+
+### 2. 将PLY转换为H5 (`ply_to_h5.py`)
+
+如果你生成了大量的 `.ply` 文件，将它们打包成一个单一的HDF5 (`.h5`) 文件会更便于管理和批量处理。
+
+**使用方法:**
+```bash
+python ply_to_h5.py \
+    --input_dir $point_cloud_output_path \
+    --output_file $your_dataset.h5
+```
+- `--input_dir`: 包含 `.ply` 文件的目录。
+- `--output_file`: 你想要创建的HDF5文件名。
+
+### 3. 可视化结果 (`visualize.py`)
+
+此脚本是一个强大的工具，可以同时可视化单个病人的多种数据，包括3D点云和2D切片，方便进行定性分析和比较。
+
+它可以显示：
+- 3D点云 (`.ply`)
+- 预处理后的灰度图切片
+- 原始的NIfTI标签切片（如 `_seg.nii`）
+- 模型生成的伪标签切片
+
+**使用方法:**
+```bash
+python visualize.py \
+    --patient_id "BraTS19_2013_0_1" \
+    --slice_index 75 \
+    --point_cloud_dir $point_cloud_output_path \
+    --grayscale_dir $brats_output_path \
+    --nifti_base_dir $brats_input_path/MICCAI_BraTS_2019_Data_Training \
+    --pseudo_label_dir $pseudo_label_path \
+    --save_figure
+```
+- `--patient_id`: 你想要可视化的病人ID。
+- `--slice_index`: 你想要查看的2D切片索引。
+- `--save_figure`: 如果设置此项，会将2D比较图保存到文件。
+- 请确保所有路径 (`--point_cloud_dir`, `--grayscale_dir` 等) 都指向正确的位置。
+
 ## 结果
 
 评估脚本会输出以下指标：
